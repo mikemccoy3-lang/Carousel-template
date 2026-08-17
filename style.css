@@ -1,0 +1,217 @@
+:root {
+  --frame-w: 1080px;
+  --frame-h: 1920px;
+  --accent: #ffcc00;
+  --bg-dark: #0a0a12;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+}
+
+.stage {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 9:16 frame, scaled to fit the viewport while keeping exact aspect ratio.
+   This is the region you screen-record for Shorts/Reels. */
+.frame {
+  position: relative;
+  width: var(--frame-w);
+  height: var(--frame-h);
+  max-width: 100vw;
+  max-height: 100vh;
+  aspect-ratio: 9 / 16;
+  background: radial-gradient(circle at 50% 30%, #1b1b2b 0%, var(--bg-dark) 70%);
+  overflow: hidden;
+  box-shadow: 0 0 60px rgba(0,0,0,0.8);
+}
+
+@media (min-aspect-ratio: 9/16) {
+  .frame { width: calc(100vh * 9 / 16); height: 100vh; }
+}
+@media (max-aspect-ratio: 9/16) {
+  .frame { width: 100vw; height: calc(100vw * 16 / 9); }
+}
+
+.glow-top, .glow-bottom {
+  position: absolute;
+  left: 0; right: 0;
+  height: 22%;
+  pointer-events: none;
+  z-index: 5;
+}
+.glow-top {
+  top: 0;
+  background: linear-gradient(to bottom, var(--bg-dark) 10%, rgba(10,10,18,0) 100%);
+}
+.glow-bottom {
+  bottom: 0;
+  background: linear-gradient(to top, var(--bg-dark) 10%, rgba(10,10,18,0) 100%);
+}
+
+.reel-viewport {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+}
+
+.reel {
+  position: absolute;
+  left: 0; right: 0;
+  top: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3.2%;
+  will-change: transform;
+}
+
+.reel-item {
+  width: 78%;
+  aspect-ratio: 1 / 1;
+  border-radius: 28px;
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+  filter: brightness(0.55) saturate(0.7);
+  transform: scale(0.9);
+  transition: filter 0.25s ease, transform 0.25s ease;
+  border: 4px solid rgba(255,255,255,0.08);
+}
+
+.reel-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.reel-item.is-center {
+  filter: brightness(1) saturate(1.05);
+  transform: scale(1);
+  border-color: rgba(255,255,255,0.25);
+}
+
+.reel-item.is-landed {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 6px rgba(255,204,0,0.25), 0 0 60px 10px rgba(255,204,0,0.35);
+  animation: landPop 0.5s cubic-bezier(.2,1.4,.4,1) both;
+}
+
+@keyframes landPop {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.12); }
+  65%  { transform: scale(0.97); }
+  100% { transform: scale(1); }
+}
+
+.center-window {
+  position: absolute;
+  top: 50%;
+  left: 11%;
+  right: 11%;
+  transform: translateY(-50%);
+  aspect-ratio: 1 / 1;
+  border: 3px solid rgba(255,255,255,0.0);
+  border-radius: 28px;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.pointer {
+  position: absolute;
+  top: 50%;
+  width: 0;
+  height: 0;
+  transform: translateY(-50%);
+  z-index: 6;
+  filter: drop-shadow(0 0 8px rgba(255,204,0,0.6));
+}
+.pointer-left {
+  left: 3%;
+  border-top: 26px solid transparent;
+  border-bottom: 26px solid transparent;
+  border-left: 34px solid var(--accent);
+}
+.pointer-right {
+  right: 3%;
+  border-top: 26px solid transparent;
+  border-bottom: 26px solid transparent;
+  border-right: 34px solid var(--accent);
+}
+
+.caption {
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  bottom: 14%;
+  text-align: center;
+  color: #fff;
+  font-size: 3.4rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-shadow: 0 4px 18px rgba(0,0,0,0.7);
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  z-index: 7;
+}
+.caption.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.spin-btn {
+  position: absolute;
+  left: 50%;
+  bottom: 6%;
+  transform: translateX(-50%);
+  z-index: 8;
+  background: var(--accent);
+  color: #1a1200;
+  border: none;
+  padding: 26px 56px;
+  border-radius: 999px;
+  font-size: 2.1rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(255,204,0,0.35);
+  transition: opacity 0.4s ease, transform 0.2s ease;
+}
+.spin-btn:active { transform: translateX(-50%) scale(0.96); }
+.spin-btn.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.flash {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  opacity: 0;
+  z-index: 9;
+  pointer-events: none;
+}
+.flash.pulse {
+  animation: flashPulse 0.35s ease-out;
+}
+@keyframes flashPulse {
+  0%   { opacity: 0.85; }
+  100% { opacity: 0; }
+}
