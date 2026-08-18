@@ -49,10 +49,15 @@ function createAudioEngine(options) {
   // the filter frequency varies — so build it once and reuse it, instead
   // of allocating a new buffer on every single tick (which was adding GC
   // pressure right when the spin is busiest, contributing to choppiness).
+  //
+  // Tuned by directly analyzing a reference wheel-spin sound: dominant
+  // tick energy sits around 2.7-3.4kHz (much brighter/sharper than a
+  // first attempt at a "wooden knock" lower down), decaying almost
+  // entirely within ~18ms — a snappy click, not a knock.
   let tickNoiseBuffer = null;
   function getTickNoiseBuffer() {
     if (tickNoiseBuffer) return tickNoiseBuffer;
-    const bufferSize = Math.floor(audioCtx.sampleRate * 0.035);
+    const bufferSize = Math.floor(audioCtx.sampleRate * 0.02);
     tickNoiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
     const data = tickNoiseBuffer.getChannelData(0);
     for (let i = 0; i < bufferSize; i++) {
@@ -61,57 +66,50 @@ function createAudioEngine(options) {
     return tickNoiseBuffer;
   }
 
-  // A real prize wheel's click is a flexible flapper snapping against a
-  // peg — a short mechanical "tock" with wooden/plastic body, not a pure
-  // tone. Layer a bandpass-filtered noise transient (the knock) with a
-  // brief pitched pluck (the resonance) to get that character.
-  function tick() {
-    const t0 = audioCtx.currentTime;
-
+  function playClick(t0) {
     const noise = audioCtx.createBufferSource();
     noise.buffer = getTickNoiseBuffer();
     const bandpass = audioCtx.createBiquadFilter();
     bandpass.type = "bandpass";
-    bandpass.frequency.setValueAtTime(1300 + Math.random() * 500, t0);
-    bandpass.Q.value = 3.5;
-    const noiseGain = audioCtx.createGain();
-    noiseGain.gain.setValueAtTime(0.5, t0);
-    noiseGain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.03);
-    noise.connect(bandpass).connect(noiseGain);
-    routeGain(noiseGain);
+    bandpass.frequency.setValueAtTime(2800 + Math.random() * 600, t0);
+    bandpass.Q.value = 6;
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(0.6, t0);
+    gain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.018);
+    noise.connect(bandpass).connect(gain);
+    routeGain(gain);
     noise.start(t0);
-
-    const osc = audioCtx.createOscillator();
-    const oscGain = audioCtx.createGain();
-    osc.type = "triangle";
-    osc.frequency.setValueAtTime(480 + Math.random() * 180, t0);
-    osc.frequency.exponentialRampToValueAtTime(180, t0 + 0.025);
-    oscGain.gain.setValueAtTime(0.0001, t0);
-    oscGain.gain.exponentialRampToValueAtTime(0.16, t0 + 0.003);
-    oscGain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.045);
-    osc.connect(oscGain);
-    routeGain(oscGain);
-    osc.start(t0);
-    osc.stop(t0 + 0.05);
   }
 
+  // The reference sound isn't a single click per peg — it's a quick
+  // double-click ("ta-tick", ~30ms apart). Reproduce that pairing rather
+  // than a single hit.
+  function tick() {
+    const t0 = audioCtx.currentTime;
+    playClick(t0);
+    playClick(t0 + 0.03);
+  }
+
+  // Reference boom is a deep, punchy hit — dominant energy around
+  // 80-100Hz (not the higher ~160Hz sweep tried first), near full volume,
+  // decaying faster overall (~250ms) than a long rumble.
   function boom() {
     const t0 = audioCtx.currentTime;
 
     const osc = audioCtx.createOscillator();
     const oscGain = audioCtx.createGain();
     osc.type = "sine";
-    osc.frequency.setValueAtTime(160, t0);
-    osc.frequency.exponentialRampToValueAtTime(40, t0 + 0.35);
+    osc.frequency.setValueAtTime(95, t0);
+    osc.frequency.exponentialRampToValueAtTime(50, t0 + 0.15);
     oscGain.gain.setValueAtTime(0.0001, t0);
-    oscGain.gain.exponentialRampToValueAtTime(0.9, t0 + 0.02);
-    oscGain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.6);
+    oscGain.gain.exponentialRampToValueAtTime(0.95, t0 + 0.01);
+    oscGain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.28);
     osc.connect(oscGain);
     routeGain(oscGain);
     osc.start(t0);
-    osc.stop(t0 + 0.65);
+    osc.stop(t0 + 0.3);
 
-    const bufferSize = Math.floor(audioCtx.sampleRate * 0.4);
+    const bufferSize = Math.floor(audioCtx.sampleRate * 0.2);
     const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
     const data = buffer.getChannelData(0);
     for (let i = 0; i < bufferSize; i++) {
@@ -121,10 +119,10 @@ function createAudioEngine(options) {
     noise.buffer = buffer;
     const noiseFilter = audioCtx.createBiquadFilter();
     noiseFilter.type = "lowpass";
-    noiseFilter.frequency.setValueAtTime(1200, t0);
+    noiseFilter.frequency.setValueAtTime(1000, t0);
     const noiseGain = audioCtx.createGain();
-    noiseGain.gain.setValueAtTime(0.5, t0);
-    noiseGain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.4);
+    noiseGain.gain.setValueAtTime(0.6, t0);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.2);
     noise.connect(noiseFilter).connect(noiseGain);
     routeGain(noiseGain);
     noise.start(t0);
