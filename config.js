@@ -45,7 +45,7 @@ window.WHEEL_CONFIG = {
   winnerIndex: 8,
 
   // --- Timing / feel ---
-  spinDurationMs: 9000,   // total spin time, start to landing — longer = more time to recognize each photo
+  spinDurationMs: 12000,  // total spin time, start to landing — longer = more time to recognize each photo
   loops: 3,                 // how many full passes through the photo set before landing — fewer = slower-feeling spin
 
   // --- Optional on-screen title shown above the button before spinning ---

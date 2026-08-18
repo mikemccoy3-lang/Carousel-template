@@ -65,7 +65,7 @@ window.TEMPLATES = {
     id: "prize-wheel",
     name: "Prize Wheel",
     defaultOptions: {
-      spinDurationMs: 9000,
+      spinDurationMs: 12000,
       loops: 3,
       resultText: ""
     },

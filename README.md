@@ -63,7 +63,7 @@ window.WHEEL_CONFIG = {
     // ...
   ],
   winnerIndex: 2,        // which photo (0-based) the wheel lands on
-  spinDurationMs: 9000,  // how long the spin takes, in milliseconds
+  spinDurationMs: 12000, // how long the spin takes, in milliseconds
   loops: 3,                // how many full passes before it lands
   title: "",
   spinButtonText: "TAP TO SPIN",
