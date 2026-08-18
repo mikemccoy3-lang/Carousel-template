@@ -125,6 +125,11 @@ To build a second template style: add a new entry to `TEMPLATES` in
 `templates.js` (or a new file included alongside it) implementing that same
 shape. No changes needed anywhere else.
 
+See **[SESSION-NOTES.md](SESSION-NOTES.md)** before starting that work — it
+documents two real bugs (choppy export, audio/video desync) that were fixed
+here, including dead ends already tried, so they don't get re-debugged from
+scratch.
+
 ## Files
 
 | File            | Purpose                                                      |
@@ -139,3 +144,4 @@ shape. No changes needed anywhere else.
 | `config.js`      | Edit this to customize `index.html` — photos, winner, timing  |
 | `app.js`         | `index.html`'s spin logic (DOM/CSS based, not canvas)          |
 | `photos/`        | Optional home for image files used by `index.html`            |
+| `SESSION-NOTES.md` | Bugs found/fixed, dead ends tried, architecture notes — read before adding a new template |
