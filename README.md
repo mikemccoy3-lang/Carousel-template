@@ -27,9 +27,11 @@ window.WHEEL_CONFIG = {
     // ...
   ],
   winnerIndex: 2,        // which photo (0-based) the wheel lands on
-  spinDurationMs: 5200,  // how long the spin takes, in milliseconds
-  loops: 5,               // how many full passes before it lands
-  title: ""
+  spinDurationMs: 9000,  // how long the spin takes, in milliseconds
+  loops: 3,                // how many full passes before it lands
+  title: "",
+  spinButtonText: "TAP TO SPIN",
+  spinAgainButtonText: "SPIN AGAIN"
 };
 ```
 
@@ -41,8 +43,13 @@ window.WHEEL_CONFIG = {
   (counting from 0), and set that number.
 - **Caption**: each photo's `label` appears under it once it lands. Leave
   it `""` for no caption.
-- **Pacing**: increase `spinDurationMs` or `loops` for a longer, more
-  suspenseful build-up; decrease them for a snappier Short.
+- **Pacing**: increase `spinDurationMs` for a longer, more suspenseful
+  build-up; decrease `loops` if it still feels too fast — fewer loops means
+  less total distance to cover, so each photo lingers longer even at the
+  same duration.
+- **Button text**: `spinButtonText` is shown before the first spin;
+  `spinAgainButtonText` replaces it after landing — handy for an event,
+  e.g. set it to `"Day 3 Favorite"`.
 
 ## How it works
 

@@ -110,8 +110,11 @@
     if (el) el.classList.add("is-center");
   }
 
-  function easeOutQuint(t) {
-    return 1 - Math.pow(1 - t, 5);
+  // Gentler than easeOutQuint — a wheel that decelerates this hard from the
+  // very first frame blurs past every image before it's readable. Quad
+  // ramps down more gradually, so images stay legible even early in the spin.
+  function easeOutQuad(t) {
+    return 1 - Math.pow(1 - t, 2);
   }
 
   // ---------- preview (idle) state ----------
@@ -124,6 +127,7 @@
     reel.style.transform = `translateY(-${baseOffset}px)`;
     highlightCenter(0);
     caption.classList.remove("visible");
+    spinBtn.querySelector("span").textContent = cfg.spinButtonText || "TAP TO SPIN";
   }
 
   // ---------- spin ----------
@@ -159,7 +163,7 @@
     function frame(now) {
       const elapsed = now - startTime;
       const t = Math.min(1, elapsed / duration);
-      const eased = easeOutQuint(t);
+      const eased = easeOutQuad(t);
       const currentDistance = targetDistance * eased;
 
       reel.style.transform = `translateY(-${baseOffset + currentDistance}px)`;
@@ -196,7 +200,7 @@
       caption.classList.add("visible");
     }
 
-    spinBtn.querySelector("span").textContent = "SPIN AGAIN";
+    spinBtn.querySelector("span").textContent = cfg.spinAgainButtonText || "SPIN AGAIN";
     setTimeout(() => {
       spinBtn.classList.remove("hidden");
       spinning = false;
