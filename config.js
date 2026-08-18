@@ -41,8 +41,8 @@ window.WHEEL_CONFIG = {
   ],
 
   // --- Which photo wins (0 = first photo in the list above) ---
-  // Placeholder until you tell me which one should be the feature image.
-  winnerIndex: 0,
+  // photos[8] = IMG_4184.jpg
+  winnerIndex: 8,
 
   // --- Timing / feel ---
   spinDurationMs: 5200,   // total spin time, start to landing
