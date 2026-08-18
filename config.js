@@ -15,38 +15,34 @@
 
   3. Press play / open index.html, hit "TAP TO SPIN", and
      screen-record the frame for your Short.
-
-  The demo ships with 8 placeholder tiles so you can see it
-  work immediately with no images of your own.
   ============================================================
 */
 
-function placeholderTile(number, color) {
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="600" height="600">
-      <rect width="600" height="600" fill="${color}"/>
-      <text x="50%" y="54%" font-family="Helvetica, Arial, sans-serif"
-            font-size="220" font-weight="900" fill="rgba(255,255,255,0.9)"
-            text-anchor="middle" dominant-baseline="middle">${number}</text>
-    </svg>`;
-  return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
-}
-
-const PLACEHOLDER_COLORS = [
-  "#e63946", "#f4a261", "#2a9d8f", "#457b9d",
-  "#8338ec", "#ff006e", "#3a86ff", "#06d6a0"
-];
-
 window.WHEEL_CONFIG = {
 
-  // --- Your photos go here ---
-  photos: PLACEHOLDER_COLORS.map((color, i) => ({
-    src: placeholderTile(i + 1, color),
-    label: `Sample Photo ${i + 1}`
-  })),
+  // --- Your photos (SEMA show pics, pulled from Drive) ---
+  photos: [
+    { src: "photos/DSC01513.jpg", label: "" },
+    { src: "photos/IMG_1436.jpg", label: "" },
+    { src: "photos/IMG_4113.jpg", label: "" },
+    { src: "photos/IMG_4155.jpg", label: "" },
+    { src: "photos/IMG_4160.jpg", label: "" },
+    { src: "photos/IMG_4165.jpg", label: "" },
+    { src: "photos/IMG_4166.jpg", label: "" },
+    { src: "photos/IMG_4171.jpg", label: "" },
+    { src: "photos/IMG_4184.jpg", label: "" },
+    { src: "photos/IMG_4188.jpg", label: "" },
+    { src: "photos/IMG_4191.jpg", label: "" },
+    { src: "photos/IMG_4192.jpg", label: "" },
+    { src: "photos/IMG_4193.jpg", label: "" },
+    { src: "photos/IMG_4194.jpg", label: "" },
+    { src: "photos/IMG_4195.jpg", label: "" },
+    { src: "photos/IMG_7060.jpg", label: "" }
+  ],
 
   // --- Which photo wins (0 = first photo in the list above) ---
-  winnerIndex: 4,
+  // Placeholder until you tell me which one should be the feature image.
+  winnerIndex: 0,
 
   // --- Timing / feel ---
   spinDurationMs: 5200,   // total spin time, start to landing
