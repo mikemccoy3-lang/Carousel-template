@@ -230,7 +230,15 @@
       recorder.onstop = () => resolve();
     });
 
-    recorder.start();
+    // Passing a timeslice makes the browser flush/re-anchor the muxed
+    // audio+video data periodically instead of buffering the entire
+    // recording and writing it out in one shot at stop(). Without this,
+    // a real desync was observed on real hardware: video played back
+    // correctly at full length, but every tick/boom sound ended up
+    // compressed into roughly the first second of audio — the two
+    // independently-clocked tracks (live Web Audio vs canvas capture)
+    // drifting apart over a long un-sliced recording.
+    recorder.start(250);
 
     tpl.run({
       ctx,

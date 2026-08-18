@@ -12,6 +12,29 @@ function createAudioEngine(options) {
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   const recordDest = options.record ? audioCtx.createMediaStreamDestination() : null;
 
+  if (recordDest) {
+    // Our sound design is sparse — short clicks separated by long silent
+    // gaps (over a second, near the end of a slow spin). Confirmed by
+    // direct instrumentation that tick()/boom() are scheduled correctly in
+    // real time, yet the exported recording plays them all back compressed
+    // into roughly the first second: some browsers mishandle long true-
+    // silence gaps when muxing a live MediaStreamAudioDestinationNode
+    // track into WebM, effectively collapsing the gaps. Keep a continuous,
+    // effectively inaudible noise floor flowing into the recording-only
+    // destination so the track is never truly silent and has no gaps to collapse.
+    const floorBufferSize = audioCtx.sampleRate * 2;
+    const floorBuffer = audioCtx.createBuffer(1, floorBufferSize, audioCtx.sampleRate);
+    const floorData = floorBuffer.getChannelData(0);
+    for (let i = 0; i < floorBufferSize; i++) floorData[i] = Math.random() * 2 - 1;
+    const floorSource = audioCtx.createBufferSource();
+    floorSource.buffer = floorBuffer;
+    floorSource.loop = true;
+    const floorGain = audioCtx.createGain();
+    floorGain.gain.value = 0.0008; // effectively inaudible, just non-zero
+    floorSource.connect(floorGain).connect(recordDest);
+    floorSource.start();
+  }
+
   function routeGain(gainNode) {
     gainNode.connect(audioCtx.destination);
     if (recordDest) gainNode.connect(recordDest);
