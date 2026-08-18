@@ -197,7 +197,7 @@
     const engine = createAudioEngine({ record: true });
     engine.resume();
 
-    // captureStream(60) samples the canvas on its own steady 60fps timer —
+    // captureStream(30) samples the canvas on its own steady 30fps timer —
     // it re-shows the last drawn frame if a new one isn't ready yet,
     // smoothing over any momentary jitter in the draw loop. (Manual
     // frame-pumping was tried and made things worse — it bakes every
@@ -205,11 +205,12 @@
     // the real fix to draw-loop jitter itself: no more redoing expensive
     // work — gradients, shadow blur — on every single frame.)
     //
-    // 60 rather than 30: at 30fps the fast opening burst of the spin —
-    // which looks fluid live at a monitor's native refresh rate — visibly
-    // judders once captured, simply because each recorded frame covers
-    // twice the motion. That's a frame-rate ceiling, not a timing bug.
-    const canvasStream = canvas.captureStream(60);
+    // A 60fps attempt was reverted: it doubles the video encoder's
+    // real-time workload without touching audio at all, which is a
+    // plausible way to introduce audio/video drift in the recording — two
+    // independently-clocked tracks getting muxed together — rather than
+    // fix anything. Not worth that risk for an unverified smoothness gain.
+    const canvasStream = canvas.captureStream(30);
     const combined = new MediaStream([
       ...canvasStream.getVideoTracks(),
       ...engine.recordDest.stream.getAudioTracks()
