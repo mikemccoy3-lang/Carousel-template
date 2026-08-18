@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Photo Gallery Sound Wheel — Studio</title>
+<link rel="stylesheet" href="studio.css">
+</head>
+<body>
+
+<div class="studio">
+
+  <header class="studio-header">
+    <h1>Photo Gallery Sound Wheel — Studio</h1>
+    <p>Drop in photos, pick a template and a winner, hit Run — get a video file back. No editing files by hand.</p>
+  </header>
+
+  <div class="studio-layout">
+
+    <div class="panel">
+
+      <section class="step">
+        <h2>1. Photos</h2>
+        <div class="dropzone" id="dropzone">
+          <p><strong>Drag &amp; drop</strong> a folder or photos here</p>
+          <p class="or">— or —</p>
+          <div class="dropzone-buttons">
+            <button type="button" class="btn-secondary" id="chooseFolderBtn">Choose Folder</button>
+            <button type="button" class="btn-secondary" id="chooseFilesBtn">Choose Files</button>
+          </div>
+        </div>
+        <input type="file" id="folderInput" webkitdirectory multiple hidden>
+        <input type="file" id="filesInput" accept="image/*" multiple hidden>
+        <p class="hint" id="photoCount">No photos loaded yet.</p>
+        <div class="thumb-grid" id="thumbGrid"></div>
+      </section>
+
+      <section class="step">
+        <h2>2. Template</h2>
+        <select id="templateSelect" class="select"></select>
+      </section>
+
+      <section class="step">
+        <h2>3. Settings</h2>
+        <label class="field">
+          <span>Result text (shown on the winning photo)</span>
+          <input type="text" id="resultTextInput" placeholder="e.g. Day 3 Favorite">
+        </label>
+        <label class="field">
+          <span>Spin duration: <span id="durationValue">9.0s</span></span>
+          <input type="range" id="durationInput" min="4000" max="15000" step="500" value="9000">
+        </label>
+        <label class="field">
+          <span>Loops: <span id="loopsValue">3</span></span>
+          <input type="range" id="loopsInput" min="1" max="8" step="1" value="3">
+        </label>
+      </section>
+
+      <section class="step">
+        <h2>4. Run</h2>
+        <p class="hint">Click a thumbnail above to choose your winner first.</p>
+        <button type="button" class="btn-primary" id="runBtn" disabled>Run</button>
+        <p class="status" id="statusText"></p>
+      </section>
+
+    </div>
+
+    <div class="preview-col">
+      <canvas id="canvas" width="1080" height="1920"></canvas>
+      <div class="output" id="output"></div>
+    </div>
+
+  </div>
+</div>
+
+<script src="audio.js"></script>
+<script src="templates.js"></script>
+<script src="studio.js"></script>
+</body>
+</html>

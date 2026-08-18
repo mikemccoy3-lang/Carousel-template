@@ -7,68 +7,16 @@
   const flash = document.getElementById("flash");
 
   let itemHeight = 0, step = 0, baseOffset = 0;
-  let audioCtx = null;
+  let engine = null;
   let spinning = false;
 
-  // ---------- audio (synthesized — no external sound files needed) ----------
-
+  // Sound synthesis lives in audio.js (shared with studio.html).
   function ensureAudio() {
-    if (!audioCtx) {
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    if (audioCtx.state === "suspended") audioCtx.resume();
+    if (!engine) engine = createAudioEngine();
+    engine.resume();
   }
-
-  function tick() {
-    if (!audioCtx) return;
-    const t0 = audioCtx.currentTime;
-    const osc = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
-    osc.type = "square";
-    osc.frequency.setValueAtTime(900 + Math.random() * 300, t0);
-    gainNode.gain.setValueAtTime(0.0001, t0);
-    gainNode.gain.exponentialRampToValueAtTime(0.25, t0 + 0.005);
-    gainNode.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.05);
-    osc.connect(gainNode).connect(audioCtx.destination);
-    osc.start(t0);
-    osc.stop(t0 + 0.06);
-  }
-
-  function boom() {
-    if (!audioCtx) return;
-    const t0 = audioCtx.currentTime;
-
-    // low-frequency thump
-    const osc = audioCtx.createOscillator();
-    const oscGain = audioCtx.createGain();
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(160, t0);
-    osc.frequency.exponentialRampToValueAtTime(40, t0 + 0.35);
-    oscGain.gain.setValueAtTime(0.0001, t0);
-    oscGain.gain.exponentialRampToValueAtTime(0.9, t0 + 0.02);
-    oscGain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.6);
-    osc.connect(oscGain).connect(audioCtx.destination);
-    osc.start(t0);
-    osc.stop(t0 + 0.65);
-
-    // noise burst for impact
-    const bufferSize = Math.floor(audioCtx.sampleRate * 0.4);
-    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
-    }
-    const noise = audioCtx.createBufferSource();
-    noise.buffer = buffer;
-    const noiseFilter = audioCtx.createBiquadFilter();
-    noiseFilter.type = "lowpass";
-    noiseFilter.frequency.setValueAtTime(1200, t0);
-    const noiseGain = audioCtx.createGain();
-    noiseGain.gain.setValueAtTime(0.5, t0);
-    noiseGain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.4);
-    noise.connect(noiseFilter).connect(noiseGain).connect(audioCtx.destination);
-    noise.start(t0);
-  }
+  function tick() { if (engine) engine.tick(); }
+  function boom() { if (engine) engine.boom(); }
 
   // ---------- reel building / layout ----------
 
