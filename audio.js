@@ -21,19 +21,44 @@ function createAudioEngine(options) {
     if (audioCtx.state === "suspended") audioCtx.resume();
   }
 
+  // A real prize wheel's click is a flexible flapper snapping against a
+  // peg — a short mechanical "tock" with wooden/plastic body, not a pure
+  // tone. Layer a bandpass-filtered noise transient (the knock) with a
+  // brief pitched pluck (the resonance) to get that character.
   function tick() {
     const t0 = audioCtx.currentTime;
+
+    const bufferSize = Math.floor(audioCtx.sampleRate * 0.035);
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 2);
+    }
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = buffer;
+    const bandpass = audioCtx.createBiquadFilter();
+    bandpass.type = "bandpass";
+    bandpass.frequency.setValueAtTime(1300 + Math.random() * 500, t0);
+    bandpass.Q.value = 3.5;
+    const noiseGain = audioCtx.createGain();
+    noiseGain.gain.setValueAtTime(0.5, t0);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.03);
+    noise.connect(bandpass).connect(noiseGain);
+    routeGain(noiseGain);
+    noise.start(t0);
+
     const osc = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
-    osc.type = "square";
-    osc.frequency.setValueAtTime(900 + Math.random() * 300, t0);
-    gainNode.gain.setValueAtTime(0.0001, t0);
-    gainNode.gain.exponentialRampToValueAtTime(0.25, t0 + 0.005);
-    gainNode.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.05);
-    osc.connect(gainNode);
-    routeGain(gainNode);
+    const oscGain = audioCtx.createGain();
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(480 + Math.random() * 180, t0);
+    osc.frequency.exponentialRampToValueAtTime(180, t0 + 0.025);
+    oscGain.gain.setValueAtTime(0.0001, t0);
+    oscGain.gain.exponentialRampToValueAtTime(0.16, t0 + 0.003);
+    oscGain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.045);
+    osc.connect(oscGain);
+    routeGain(oscGain);
     osc.start(t0);
-    osc.stop(t0 + 0.06);
+    osc.stop(t0 + 0.05);
   }
 
   function boom() {
