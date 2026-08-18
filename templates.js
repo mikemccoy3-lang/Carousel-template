@@ -18,6 +18,13 @@
         (see audio.js) — call them at whatever moments make sense.
       - Call `onDone()` exactly once when the animation is finished;
         studio.js stops recording shortly after.
+      - Performance note: studio.js records by sampling this canvas on a
+        steady timer (captureStream), not by pulling each drawn frame
+        directly — so any per-frame work here that's slow or jittery
+        (recreating gradients, shadow blur, big allocations) shows up as
+        choppiness in the exported video even if the live canvas looks
+        smooth. Precompute anything that doesn't change frame-to-frame
+        (see bgLayer/overlayLayer below) rather than redrawing it every tick.
 
   To add a new template later: write its run() function below (or in a new
   file included alongside this one) and add an entry to TEMPLATES. Nothing
@@ -96,53 +103,80 @@ window.TEMPLATES = {
       for (let i = 0; i <= winner; i++) sequence.push(i);
       const targetDistance = (sequence.length - 1) * step;
 
-      function drawBackground() {
-        const grad = ctx.createRadialGradient(
+      // The background, vignettes, and pointer arrows never change frame to
+      // frame — only the photo reel moves. Recreating gradients and doing
+      // shadow-blur work for them on every single animation frame was the
+      // actual cause of choppy playback (it periodically stalls the main
+      // thread, which the recorder bakes straight into the output). Draw
+      // each of them once onto an offscreen canvas and blit those each
+      // frame instead of redrawing from scratch. Two layers because the
+      // vignette/pointers must stay stacked *above* the moving reel while
+      // the plain background must stay *below* it.
+      const bgLayer = document.createElement("canvas");
+      bgLayer.width = width;
+      bgLayer.height = height;
+      const bgCtx = bgLayer.getContext("2d");
+
+      const overlayLayer = document.createElement("canvas");
+      overlayLayer.width = width;
+      overlayLayer.height = height;
+      const overlayCtx = overlayLayer.getContext("2d");
+
+      (function drawBackgroundLayerOnce() {
+        const grad = bgCtx.createRadialGradient(
           width / 2, height * 0.3, 0,
           width / 2, height * 0.3, height * 0.7
         );
         grad.addColorStop(0, "#1b1b2b");
         grad.addColorStop(1, "#0a0a12");
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, width, height);
-      }
+        bgCtx.fillStyle = grad;
+        bgCtx.fillRect(0, 0, width, height);
+      })();
 
-      function drawVignettes() {
-        const topGrad = ctx.createLinearGradient(0, 0, 0, height * 0.22);
+      (function drawOverlayLayerOnce() {
+        // overlayLayer starts transparent, so only the gradient/arrow
+        // shapes themselves paint — everything else lets the reel show through.
+        const topGrad = overlayCtx.createLinearGradient(0, 0, 0, height * 0.22);
         topGrad.addColorStop(0, "#0a0a12");
         topGrad.addColorStop(1, "rgba(10,10,18,0)");
-        ctx.fillStyle = topGrad;
-        ctx.fillRect(0, 0, width, height * 0.22);
+        overlayCtx.fillStyle = topGrad;
+        overlayCtx.fillRect(0, 0, width, height * 0.22);
 
-        const botGrad = ctx.createLinearGradient(0, height * 0.78, 0, height);
+        const botGrad = overlayCtx.createLinearGradient(0, height * 0.78, 0, height);
         botGrad.addColorStop(0, "rgba(10,10,18,0)");
         botGrad.addColorStop(1, "#0a0a12");
-        ctx.fillStyle = botGrad;
-        ctx.fillRect(0, height * 0.78, width, height * 0.22);
-      }
+        overlayCtx.fillStyle = botGrad;
+        overlayCtx.fillRect(0, height * 0.78, width, height * 0.22);
 
-      function drawPointers() {
         const armY = centerY;
         const armHalf = 26 * scale;
         const armW = 34 * scale;
-        ctx.fillStyle = "#ffcc00";
-        ctx.shadowColor = "rgba(255,204,0,0.6)";
-        ctx.shadowBlur = 10 * scale;
+        overlayCtx.fillStyle = "#ffcc00";
+        overlayCtx.shadowColor = "rgba(255,204,0,0.6)";
+        overlayCtx.shadowBlur = 10 * scale;
 
-        ctx.beginPath();
-        ctx.moveTo(32 * scale, armY - armHalf);
-        ctx.lineTo(32 * scale + armW, armY);
-        ctx.lineTo(32 * scale, armY + armHalf);
-        ctx.closePath();
-        ctx.fill();
+        overlayCtx.beginPath();
+        overlayCtx.moveTo(32 * scale, armY - armHalf);
+        overlayCtx.lineTo(32 * scale + armW, armY);
+        overlayCtx.lineTo(32 * scale, armY + armHalf);
+        overlayCtx.closePath();
+        overlayCtx.fill();
 
-        ctx.beginPath();
-        ctx.moveTo(width - 32 * scale, armY - armHalf);
-        ctx.lineTo(width - 32 * scale - armW, armY);
-        ctx.lineTo(width - 32 * scale, armY + armHalf);
-        ctx.closePath();
-        ctx.fill();
-        ctx.shadowBlur = 0;
+        overlayCtx.beginPath();
+        overlayCtx.moveTo(width - 32 * scale, armY - armHalf);
+        overlayCtx.lineTo(width - 32 * scale - armW, armY);
+        overlayCtx.lineTo(width - 32 * scale, armY + armHalf);
+        overlayCtx.closePath();
+        overlayCtx.fill();
+        overlayCtx.shadowBlur = 0;
+      })();
+
+      function drawBackground() {
+        ctx.drawImage(bgLayer, 0, 0);
+      }
+
+      function drawOverlay() {
+        ctx.drawImage(overlayLayer, 0, 0);
       }
 
       function drawReel(currentDistance, landed) {
@@ -223,8 +257,7 @@ window.TEMPLATES = {
 
         drawBackground();
         drawReel(landed ? targetDistance : currentDistance, landed);
-        drawVignettes();
-        drawPointers();
+        drawOverlay();
 
         if (landed) {
           const sinceLand = now - landedAt;

@@ -21,6 +21,23 @@ function createAudioEngine(options) {
     if (audioCtx.state === "suspended") audioCtx.resume();
   }
 
+  // Ticks can fire many times per second during the fast part of a spin.
+  // The underlying noise sample doesn't need to be unique per tick — only
+  // the filter frequency varies — so build it once and reuse it, instead
+  // of allocating a new buffer on every single tick (which was adding GC
+  // pressure right when the spin is busiest, contributing to choppiness).
+  let tickNoiseBuffer = null;
+  function getTickNoiseBuffer() {
+    if (tickNoiseBuffer) return tickNoiseBuffer;
+    const bufferSize = Math.floor(audioCtx.sampleRate * 0.035);
+    tickNoiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = tickNoiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 2);
+    }
+    return tickNoiseBuffer;
+  }
+
   // A real prize wheel's click is a flexible flapper snapping against a
   // peg — a short mechanical "tock" with wooden/plastic body, not a pure
   // tone. Layer a bandpass-filtered noise transient (the knock) with a
@@ -28,14 +45,8 @@ function createAudioEngine(options) {
   function tick() {
     const t0 = audioCtx.currentTime;
 
-    const bufferSize = Math.floor(audioCtx.sampleRate * 0.035);
-    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 2);
-    }
     const noise = audioCtx.createBufferSource();
-    noise.buffer = buffer;
+    noise.buffer = getTickNoiseBuffer();
     const bandpass = audioCtx.createBiquadFilter();
     bandpass.type = "bandpass";
     bandpass.frequency.setValueAtTime(1300 + Math.random() * 500, t0);

@@ -197,6 +197,13 @@
     const engine = createAudioEngine({ record: true });
     engine.resume();
 
+    // captureStream(30) samples the canvas on its own steady 30fps timer,
+    // which is actually what we want: it re-shows the last drawn frame if
+    // a new one isn't ready yet, smoothing over any momentary jitter in the
+    // draw loop. (Manual frame-pumping was tried and made things worse — it
+    // bakes every draw-loop hitch directly into the recording. See
+    // templates.js for the real fix: the draw loop no longer redoes
+    // expensive work — gradients, shadow blur — on every single frame.)
     const canvasStream = canvas.captureStream(30);
     const combined = new MediaStream([
       ...canvasStream.getVideoTracks(),
@@ -204,7 +211,10 @@
     ]);
 
     const mimeType = pickMimeType();
-    const recorder = new MediaRecorder(combined, mimeType ? { mimeType } : undefined);
+    const recorder = new MediaRecorder(combined, Object.assign(
+      { videoBitsPerSecond: 8_000_000 },
+      mimeType ? { mimeType } : {}
+    ));
     const chunks = [];
     recorder.ondataavailable = (e) => {
       if (e.data && e.data.size) chunks.push(e.data);
