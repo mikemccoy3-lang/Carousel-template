@@ -3,16 +3,32 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Photo Gallery Sound Wheel — Studio</title>
+<title>Sound Wheel Studio</title>
+
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="theme-color" content="#0a0a12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Sound Wheel">
+
 <link rel="stylesheet" href="studio.css">
 </head>
 <body>
 
+<div class="bg-glow bg-glow-a"></div>
+<div class="bg-glow bg-glow-b"></div>
+
 <div class="studio">
 
   <header class="studio-header">
-    <h1>Photo Gallery Sound Wheel — Studio</h1>
-    <p>Drop in photos, pick a template and a winner, hit Run — get a video file back. No editing files by hand.</p>
+    <img class="app-icon" src="icons/icon-192.png" alt="">
+    <div class="header-text">
+      <h1>Sound Wheel Studio</h1>
+      <p>Drop in photos, pick a winner, hit Run — get a video file back. No editing files by hand.</p>
+    </div>
   </header>
 
   <div class="studio-layout">
@@ -20,9 +36,13 @@
     <div class="panel">
 
       <section class="step">
-        <h2>1. Photos</h2>
+        <div class="step-head"><span class="step-num">1</span><h2>Photos</h2></div>
         <div class="dropzone" id="dropzone">
-          <p><strong>Drag &amp; drop</strong> a folder or photos here</p>
+          <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 16V4M12 4L7 9M12 4l5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <p class="dropzone-title"><strong>Drag &amp; drop</strong> a folder or photos here</p>
           <p class="or">— or —</p>
           <div class="dropzone-buttons">
             <button type="button" class="btn-secondary" id="chooseFolderBtn">Choose Folder</button>
@@ -36,37 +56,46 @@
       </section>
 
       <section class="step">
-        <h2>2. Template</h2>
-        <select id="templateSelect" class="select"></select>
+        <div class="step-head"><span class="step-num">2</span><h2>Template</h2></div>
+        <div class="select-wrap">
+          <select id="templateSelect" class="select"></select>
+        </div>
       </section>
 
       <section class="step">
-        <h2>3. Settings</h2>
+        <div class="step-head"><span class="step-num">3</span><h2>Settings</h2></div>
         <label class="field">
-          <span>Result text (shown on the winning photo)</span>
+          <span>Result text <em>(shown on the winning photo)</em></span>
           <input type="text" id="resultTextInput" placeholder="e.g. Day 3 Favorite">
         </label>
         <label class="field">
-          <span>Spin duration: <span id="durationValue">12.0s</span></span>
+          <span>Spin duration <b id="durationValue">12.0s</b></span>
           <input type="range" id="durationInput" min="4000" max="20000" step="500" value="12000">
         </label>
         <label class="field">
-          <span>Loops: <span id="loopsValue">3</span></span>
+          <span>Loops <b id="loopsValue">3</b></span>
           <input type="range" id="loopsInput" min="1" max="8" step="1" value="3">
         </label>
       </section>
 
-      <section class="step">
-        <h2>4. Run</h2>
+      <section class="step step-run">
+        <div class="step-head"><span class="step-num">4</span><h2>Run</h2></div>
         <p class="hint">Click a thumbnail above to choose your winner first.</p>
-        <button type="button" class="btn-primary" id="runBtn" disabled>Run</button>
+        <button type="button" class="btn-primary" id="runBtn" disabled>
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M7 4.5v15l12-7.5-12-7.5z" fill="currentColor"/>
+          </svg>
+          <span>Run</span>
+        </button>
         <p class="status" id="statusText"></p>
       </section>
 
     </div>
 
     <div class="preview-col">
-      <canvas id="canvas" width="1080" height="1920"></canvas>
+      <div class="canvas-frame">
+        <canvas id="canvas" width="1080" height="1920"></canvas>
+      </div>
       <div class="output" id="output"></div>
     </div>
 
@@ -76,5 +105,36 @@
 <script src="audio.js"></script>
 <script src="templates.js"></script>
 <script src="studio.js"></script>
+<script>
+  // Cosmetic only — fills the range sliders up to their current value.
+  // Kept separate from studio.js so the app's actual logic is untouched.
+  (function () {
+    const ranges = Array.from(document.querySelectorAll('input[type="range"]'));
+    function syncFill(r) {
+      const pct = ((r.value - r.min) / (r.max - r.min)) * 100;
+      r.style.setProperty('--fill', pct + '%');
+    }
+    ranges.forEach((r) => {
+      r.addEventListener('input', () => syncFill(r));
+      syncFill(r);
+    });
+    const templateSelect = document.getElementById('templateSelect');
+    if (templateSelect) {
+      templateSelect.addEventListener('change', () => {
+        setTimeout(() => ranges.forEach(syncFill), 0);
+      });
+    }
+
+    // Only pulse the status dot while actively rendering, not on "Done."
+    const statusText = document.getElementById('statusText');
+    if (statusText) {
+      const syncPulse = () => {
+        statusText.classList.toggle('is-active', /render/i.test(statusText.textContent));
+      };
+      new MutationObserver(syncPulse).observe(statusText, { childList: true, characterData: true, subtree: true });
+      syncPulse();
+    }
+  })();
+</script>
 </body>
 </html>

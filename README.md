@@ -37,6 +37,20 @@ Both use the same spin physics and the same synthesized sound effects
 The exported video is always exactly 1080×1920 (true 9:16), regardless of
 your browser window size — no screen-recording setup needed.
 
+### Installing it as an app
+
+`studio.html` ships with a real app icon and manifest, so you can make it
+launch like a standalone app instead of a browser tab:
+
+- **Chrome / Edge**: open `studio.html`, click the **⋮** menu → **Cast, save
+  and share** (or **More tools**) → **Create shortcut...**, check **Open as
+  window**, and save. This works for local files — no hosting required —
+  and gives you a proper dock/desktop icon that opens Sound Wheel Studio in
+  its own chrome-free window.
+- **If it's ever hosted** (e.g. GitHub Pages): any browser that supports
+  "Install app" / "Add to Home Screen" will pick up the icon and name from
+  `manifest.json` automatically.
+
 **Note on file format**: browsers record video as `.webm` by default
 (Chrome doesn't natively export `.mp4` via this API). `.webm` uploads fine
 to YouTube, Shorts, Instagram, and TikTok — it's a real, playable video
@@ -144,4 +158,6 @@ scratch.
 | `config.js`      | Edit this to customize `index.html` — photos, winner, timing  |
 | `app.js`         | `index.html`'s spin logic (DOM/CSS based, not canvas)          |
 | `photos/`        | Optional home for image files used by `index.html`            |
+| `manifest.json`  | Web app manifest — name/icons used when installed as an app   |
+| `icons/`         | App icon in the sizes `manifest.json` and the favicons need   |
 | `SESSION-NOTES.md` | Bugs found/fixed, dead ends tried, architecture notes — read before adding a new template |
