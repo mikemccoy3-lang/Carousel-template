@@ -40,16 +40,31 @@ your browser window size — no screen-recording setup needed.
 ### Installing it as an app
 
 `studio.html` ships with a real app icon and manifest, so you can make it
-launch like a standalone app instead of a browser tab:
+launch like a standalone app instead of a browser tab.
 
-- **Chrome / Edge**: open `studio.html`, click the **⋮** menu → **Cast, save
-  and share** (or **More tools**) → **Create shortcut...**, check **Open as
-  window**, and save. This works for local files — no hosting required —
-  and gives you a proper dock/desktop icon that opens Sound Wheel Studio in
-  its own chrome-free window.
-- **If it's ever hosted** (e.g. GitHub Pages): any browser that supports
-  "Install app" / "Add to Home Screen" will pick up the icon and name from
-  `manifest.json` automatically.
+**Important**: Chrome only picks up the custom icon from `manifest.json`
+when the page is served from a real `http(s)` address — opening the `.html`
+file directly (`file://...`) makes a shortcut with a generic/blank icon
+instead, even though everything else about the shortcut still works.
+
+1. Double-click **`start-app.command`** (macOS). The first time, macOS will
+   likely warn that it's from an unidentified developer (normal for any
+   downloaded script) — right-click it and choose **Open** instead to
+   confirm once. It starts a tiny local server in that folder and opens
+   Sound Wheel Studio at `http://localhost:8765/studio.html`. Leave that
+   terminal window open while you use the app; closing it stops the
+   server. (Needs Python, which macOS normally already has — if not,
+   running `python3 --version` in Terminal once will prompt you to
+   install it.)
+2. With that `localhost` page open in Chrome, click the **⋮** menu →
+   **Cast, save and share** (or **More tools**) → **Create shortcut...**,
+   check **Open as window**, and save. Now the icon shows up correctly, and
+   you get a proper dock/desktop launcher that opens in its own
+   chrome-free window.
+
+If it's ever hosted (e.g. GitHub Pages), the same applies automatically —
+any browser's native "Install app" / "Add to Home Screen" prompt will pick
+up the icon and name from `manifest.json`, no `start-app.command` needed.
 
 **Note on file format**: browsers record video as `.webm` by default
 (Chrome doesn't natively export `.mp4` via this API). `.webm` uploads fine
@@ -159,5 +174,6 @@ scratch.
 | `app.js`         | `index.html`'s spin logic (DOM/CSS based, not canvas)          |
 | `photos/`        | Optional home for image files used by `index.html`            |
 | `manifest.json`  | Web app manifest — name/icons used when installed as an app   |
+| `start-app.command` | macOS: double-click to serve the app over localhost (needed for the custom icon to show up when creating a shortcut) |
 | `icons/`         | App icon in the sizes `manifest.json` and the favicons need   |
 | `SESSION-NOTES.md` | Bugs found/fixed, dead ends tried, architecture notes — read before adding a new template |
